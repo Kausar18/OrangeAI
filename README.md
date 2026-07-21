@@ -46,3 +46,26 @@ python app.py
 http://127.0.0.1:5000
 
 ## Struktur Folder
+OrangeAI/
+├── app.py
+├── class_names.json
+├── model_cnn_jeruk.h5 ← download dari Drive
+├── static/
+│ ├── style.css
+│ ├── script.js
+│ └── uploads/
+└── templates/
+├── index.html
+├── riwayat.html
+├── statistik.html
+└── tentang.html
+
+## Dataset
+- [Fruits Fresh and Rotten - Kaggle](https://www.kaggle.com/datasets/sriramr/fruits-fresh-and-rotten-for-classification)
+- [Orange Diseases Dataset - Kaggle](https://www.kaggle.com/datasets/jonathansilva2020/orange-diseases-dataset)
+
+## Tim
+- **Maulana Malik Ibrahim** — 065123069
+- **Adriansyah Juliandi** — 065123102
+
+**Universitas Pakuan • Pengolahan Citra Digital • 2025**
