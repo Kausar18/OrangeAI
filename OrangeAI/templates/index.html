@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OrangeAI — Klasifikasi Kualitas Jeruk CNN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">OrangeAI<span>.</span></div>
+      <div class="nav-menu">
+        <a href="/" class="nav-link active">Klasifikasi</a>
+        <a href="/riwayat-page" class="nav-link">Riwayat</a>
+        <a href="/statistik-page" class="nav-link">Statistik</a>
+        <a href="/tentang-page" class="nav-link">Tentang</a>
+        <span class="badge-beta">BETA</span>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="panel-left">
+        <div class="hero-tag">
+          <span class="tag-dot"></span>Pengolahan Citra Digital
+        </div>
+
+        <h1 class="hero-title">
+          Deteksi Kualitas<br />
+          Buah Jeruk<br />
+          <em>Otomatis.</em>
+        </h1>
+
+        <p class="hero-sub">
+          Upload foto buah jeruk dan sistem akan mengklasifikasikan kualitas
+          serta jenis penyakitnya secara otomatis menggunakan Arsitektur Deep
+          Learning MobileNetV2.
+        </p>
+
+        <div class="upload-zone" id="uploadZone">
+          <input
+            type="file"
+            id="fileInput"
+            accept="image/png,image/jpg,image/jpeg"
+            hidden
+          />
+          <div class="upload-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#E8501A"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+          <div class="upload-text">
+            <strong>Klik untuk upload</strong> atau drag & drop
+          </div>
+          <div class="upload-formats">PNG, JPG, JPEG — maks. 10MB</div>
+        </div>
+
+        <div class="file-preview" id="filePreview" style="display:none;">
+          <div class="thumb" id="thumb"></div>
+          <div class="file-info">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-status">Siap dianalisis</div>
+          </div>
+          <div class="status-dot"></div>
+        </div>
+
+        <button class="btn-primary" id="btnAnalyze" disabled>
+          Analisis Sekarang →
+        </button>
+
+        <div class="info-strip">
+          <div class="info-card">
+            <div class="info-label">Akurasi</div>
+            <div class="info-val">99.30%</div>
+            <div class="info-desc">Training set</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Dataset</div>
+            <div class="info-val">4.9421</div>
+            <div class="info-desc">Total citra</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Metode</div>
+            <div class="info-val">CNN</div>
+            <div class="info-desc">MobileNetV2</div>
+          </div>
+        </div>
+
+        <div class="pipeline-section">
+          <div class="section-label">Pipeline proses</div>
+          <div class="pipeline">
+            <div class="pipe-step">
+              <div class="pipe-num">1</div>
+              <div class="pipe-name">Input Img</div>
+            </div>
+            <div class="pipe-arrow">›</div>
+            <div class="pipe-step">
+              <div class="pipe-num">2</div>
+              <div class="pipe-name">Resize 224x224</div>
+            </div>
+            <div class="pipe-arrow">›</div>
+            <div class="pipe-step">
+              <div class="pipe-num">3</div>
+              <div class="pipe-name">Normalisasi</div>
+            </div>
+            <div class="pipe-arrow">›</div>
+            <div class="pipe-step">
+              <div class="pipe-num">4</div>
+              <div class="pipe-name">Conv Layers</div>
+            </div>
+            <div class="pipe-arrow">›</div>
+            <div class="pipe-step">
+              <div class="pipe-num">5</div>
+              <div class="pipe-name">Global Avg Pool</div>
+            </div>
+            <div class="pipe-arrow">›</div>
+            <div class="pipe-step">
+              <div class="pipe-num">6</div>
+              <div class="pipe-name">Softmax Output</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-right">
+        <div class="section-label">Hasil Klasifikasi</div>
+
+        <div class="result-card" id="resultCard">
+          <div class="result-header">
+            <div class="result-title">Analisis Terbaru</div>
+            <div class="result-time" id="resultTime">—</div>
+          </div>
+          <div class="result-body" id="resultBody">
+            <div class="placeholder">
+              Belum ada hasil. Silakan upload gambar jeruk untuk memulai
+              analisis.
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">Nilai Probabilitas Klasifikasi</div>
+        <div
+          class="feature-grid"
+          id="probaContainer"
+          style="display: flex; flex-direction: column; gap: 12px; border: none; background: transparent;"
+        >
+          <div class="placeholder-small" style="color: #666; font-size: 13px;">
+            Probabilitas kelas akan muncul setelah analisis
+          </div>
+        </div>
+
+        <div class="section-label" style="margin-top: 24px;">
+          Riwayat Analisis
+        </div>
+        <div class="hist-list" id="historyList">
+          <div class="placeholder-small">Belum ada riwayat</div>
+        </div>
+      </section>
+    </main>
+
+    <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+      <div class="spinner"></div>
+      <div class="loading-text">Menganalisis citra dengan GPU...</div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>

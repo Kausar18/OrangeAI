@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OrangeAI — Statistik</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      .page-content { padding: 36px 40px; max-width: 1100px; margin: 0 auto; }
+      .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: #F0EDE8; margin-bottom: 6px; }
+      .page-title span { color: #E8501A; }
+      .page-sub { font-size: 13px; color: #666; margin-bottom: 32px; }
+
+      .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      .stat-card {
+          background: #161616; border: 1px solid #222;
+          border-radius: 12px; padding: 24px;
+      }
+      .stat-card-title {
+          font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+          color: #F0EDE8; text-transform: uppercase; letter-spacing: 0.5px;
+          margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #222;
+      }
+
+      .kelas-bar-wrap { margin-bottom: 16px; }
+      .kelas-bar-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+      .kelas-name { font-size: 12px; font-weight: 600; color: #F0EDE8; }
+      .kelas-count { font-size: 12px; color: #666; }
+      .kelas-track { height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
+      .kelas-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+
+      .summary-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+      .mini-card {
+          background: #111; border: 1px solid #1E1E1E;
+          border-radius: 8px; padding: 12px 14px; text-align: center;
+      }
+      .mini-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+      .mini-val { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: #E8501A; }
+
+      .empty-chart { display: flex; align-items: center; justify-content: center; height: 200px; color: #555; font-size: 13px; }
+
+      .model-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .model-info-item { background: #111; border: 1px solid #1E1E1E; border-radius: 8px; padding: 10px 14px; }
+      .model-info-key { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 3px; }
+      .model-info-val { font-size: 13px; font-weight: 600; color: #F0EDE8; }
+      .model-info-val.highlight { color: #E8501A; }
+
+      canvas { max-height: 260px; }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">OrangeAI<span>.</span></div>
+      <div class="nav-menu">
+        <a href="/" class="nav-link ">Klasifikasi</a>
+        <a href="/riwayat-page" class="nav-link">Riwayat</a>
+        <a href="/statistik-page" class="nav-link active">Statistik</a>
+        <a href="/tentang-page" class="nav-link ">Tentang</a>
+        <span class="badge-beta">BETA</span>
+      </div>
+    </nav>
+
+    <div class="page-content">
+      <div class="page-title">Dashboard <span>Statistik</span></div>
+      <p class="page-sub">Ringkasan hasil klasifikasi dan informasi model</p>
+
+      <div class="summary-row">
+        <div class="mini-card">
+          <div class="mini-label">Total Dianalisis</div>
+          <div class="mini-val" id="totalAnalisis">0</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">Avg Confidence</div>
+          <div class="mini-val" id="avgConfidence">—</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">Kelas Dominan</div>
+          <div class="mini-val" id="kelasDoiman" style="font-size:14px;">—</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <!-- Pie Chart -->
+        <div class="stat-card">
+          <div class="stat-card-title">Distribusi Kelas</div>
+          <div id="pieContainer">
+            <div class="empty-chart">
+              Belum ada data — mulai analisis di halaman Klasifikasi
+            </div>
+          </div>
+        </div>
+
+        <!-- Bar per kelas -->
+        <div class="stat-card">
+          <div class="stat-card-title">Jumlah per Kelas</div>
+          <div id="barContainer">
+            <div class="empty-chart">Belum ada data</div>
+          </div>
+        </div>
+
+        <!-- Confidence per kelas -->
+        <div class="stat-card">
+          <div class="stat-card-title">Rata-rata Confidence per Kelas</div>
+          <div id="confContainer">
+            <div class="empty-chart">Belum ada data</div>
+          </div>
+        </div>
+
+        <!-- Info Model -->
+        <div class="stat-card">
+          <div class="stat-card-title">Informasi Model</div>
+          <div class="model-info-grid">
+            <div class="model-info-item">
+              <div class="model-info-key">Arsitektur</div>
+              <div class="model-info-val highlight">MobileNetV2</div>
+            </div>
+            <div class="model-info-item">
+              <div class="model-info-key">Metode</div>
+              <div class="model-info-val">Transfer Learning</div>
+            </div>
+            <div class="model-info-item">
+              <div class="model-info-key">Akurasi Testing</div>
+              <div class="model-info-val highlight">99.30%</div>
+            </div>
+            <div class="model-info-item">
+              <div class="model-info-key">Total Dataset</div>
+              <div class="model-info-val">4.942 citra</div>
+            </div>
+            <div class="model-info-item">
+              <div class="model-info-key">Jumlah Kelas</div>
+              <div class="model-info-val">4 kelas</div>
+            </div>
+            <div class="model-info-item">
+              <div class="model-info-key">Input Size</div>
+              <div class="model-info-val">224 × 224 px</div>
+            </div>
+            <div class="model-info-item">
+              <div class="model-info-key">Training Epoch</div>
+              <div class="model-info-val">29 epoch</div>
+            </div>
+            <div class="model-info-item">
+              <div class="model-info-key">Optimizer</div>
+              <div class="model-info-val">Adam</div>
+            </div>
+            <div class="model-info-item" style="grid-column: span 2;">
+              <div class="model-info-key">Dataset Sumber</div>
+              <div class="model-info-val">
+                Kaggle Fresh&Rotten + Orange Diseases
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const COLORS = {
+          'SEGAR'       : '#4ADE80',
+          'BUSUK'       : '#F87171',
+          'BINTIK HITAM': '#FBBF24',
+          'BERPENYAKIT' : '#FB923C',
+      }
+
+      Chart.defaults.color = '#666'
+      Chart.defaults.font.family = 'DM Sans'
+
+      async function loadStats() {
+          const res  = await fetch('/api/statistik')
+          const data = await res.json()
+
+          document.getElementById('totalAnalisis').textContent = data.total
+
+          if (data.total === 0) return
+
+          // Avg confidence semua
+          const allConf = data.riwayat.map(r => r.confidence)
+          const avg = (allConf.reduce((a,b)=>a+b,0)/allConf.length).toFixed(1)
+          document.getElementById('avgConfidence').textContent = avg + '%'
+
+          // Kelas dominan
+          const dominan = Object.entries(data.per_kelas).sort((a,b)=>b[1]-a[1])[0]
+          const domEl = document.getElementById('kelasDoiman')
+          domEl.textContent = dominan[0]
+          domEl.style.color = COLORS[dominan[0]] || '#E8501A'
+
+          const labels = Object.keys(data.per_kelas)
+          const values = Object.values(data.per_kelas)
+          const bgColors = labels.map(l => COLORS[l] || '#888')
+
+          // Pie Chart
+          document.getElementById('pieContainer').innerHTML = '<canvas id="pieChart"></canvas>'
+          new Chart(document.getElementById('pieChart'), {
+              type: 'doughnut',
+              data: {
+                  labels,
+                  datasets: [{ data: values, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 6 }]
+              },
+              options: {
+                  plugins: {
+                      legend: { position: 'bottom', labels: { padding: 16, font: { size: 11 } } }
+                  },
+                  cutout: '65%',
+              }
+          })
+
+          // Bar Chart jumlah per kelas
+          document.getElementById('barContainer').innerHTML = '<canvas id="barChart"></canvas>'
+          new Chart(document.getElementById('barChart'), {
+              type: 'bar',
+              data: {
+                  labels,
+                  datasets: [{
+                      label: 'Jumlah',
+                      data: values,
+                      backgroundColor: bgColors,
+                      borderRadius: 6,
+                      borderWidth: 0
+                  }]
+              },
+              options: {
+                  plugins: { legend: { display: false } },
+                  scales: {
+                      x: { grid: { color: '#1E1E1E' }, ticks: { font: { size: 10 } } },
+                      y: { grid: { color: '#1E1E1E' }, ticks: { stepSize: 1, font: { size: 10 } } }
+                  }
+              }
+          })
+
+          // Confidence per kelas
+          if (Object.keys(data.avg_confidence).length > 0) {
+              const confLabels = Object.keys(data.avg_confidence)
+              const confVals   = Object.values(data.avg_confidence)
+              const confColors = confLabels.map(l => COLORS[l] || '#888')
+
+              document.getElementById('confContainer').innerHTML = '<canvas id="confChart"></canvas>'
+              new Chart(document.getElementById('confChart'), {
+                  type: 'bar',
+                  data: {
+                      labels: confLabels,
+                      datasets: [{
+                          label: 'Avg Confidence (%)',
+                          data: confVals,
+                          backgroundColor: confColors,
+                          borderRadius: 6,
+                          borderWidth: 0
+                      }]
+                  },
+                  options: {
+                      plugins: { legend: { display: false } },
+                      scales: {
+                          x: { grid: { color: '#1E1E1E' }, ticks: { font: { size: 10 } } },
+                          y: {
+                              grid: { color: '#1E1E1E' },
+                              min: 0, max: 100,
+                              ticks: { callback: v => v + '%', font: { size: 10 } }
+                          }
+                      }
+                  }
+              })
+          }
+      }
+
+      loadStats()
+    </script>
+  </body>
+</html>

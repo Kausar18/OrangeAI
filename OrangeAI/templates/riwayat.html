@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OrangeAI — Riwayat Analisis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <style>
+      .page-content { padding: 36px 40px; max-width: 1100px; margin: 0 auto; }
+      .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: #F0EDE8; margin-bottom: 6px; }
+      .page-title span { color: #E8501A; }
+      .page-sub { font-size: 13px; color: #666; margin-bottom: 32px; }
+
+      .summary-strip { display: flex; gap: 16px; margin-bottom: 32px; }
+      .summary-card {
+          flex: 1; background: #161616; border: 1px solid #222;
+          border-radius: 10px; padding: 16px 20px;
+      }
+      .summary-card .s-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+      .summary-card .s-val { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: #E8501A; }
+      .summary-card .s-desc { font-size: 10px; color: #555; margin-top: 4px; }
+
+      .filter-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+      .filter-btn {
+          padding: 6px 14px; border-radius: 20px; border: 1px solid #333;
+          background: #161616; color: #888; font-size: 11px; font-weight: 600;
+          cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+          transition: all 0.2s;
+      }
+      .filter-btn:hover { border-color: #E8501A; color: #E8501A; }
+      .filter-btn.active { background: #E8501A; border-color: #E8501A; color: #fff; }
+
+      .riwayat-table { width: 100%; border-collapse: collapse; }
+      .riwayat-table th {
+          text-align: left; padding: 10px 14px;
+          font-size: 10px; color: #555; text-transform: uppercase;
+          letter-spacing: 0.8px; border-bottom: 1px solid #222;
+          font-weight: 600;
+      }
+      .riwayat-table td { padding: 12px 14px; border-bottom: 1px solid #1a1a1a; vertical-align: middle; }
+      .riwayat-table tr:hover td { background: #161616; }
+
+      .td-img { width: 48px; height: 48px; border-radius: 8px; background: #222 no-repeat center/cover; }
+      .td-filename { font-size: 12px; color: #ddd; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .td-sub { font-size: 10px; color: #555; margin-top: 2px; }
+
+      .label-badge {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 4px 10px; border-radius: 20px;
+          font-size: 11px; font-weight: 700; font-family: 'Syne', sans-serif;
+      }
+      .label-badge.segar      { background: #0D2B1A; color: #4ADE80; border: 1px solid #1A4D2E; }
+      .label-badge.busuk      { background: #2B0D0D; color: #F87171; border: 1px solid #4D1A1A; }
+      .label-badge.blackspot  { background: #2B2500; color: #FBBF24; border: 1px solid #4D4000; }
+      .label-badge.berpenyakit{ background: #2B1500; color: #FB923C; border: 1px solid #4D2800; }
+
+      .conf-pill {
+          font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+      }
+
+      .empty-state { text-align: center; padding: 60px 20px; color: #555; }
+      .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+      .empty-state p { font-size: 13px; }
+      .empty-state a { color: #E8501A; text-decoration: none; font-weight: 500; }
+
+      .btn-clear {
+          padding: 8px 16px; background: transparent; border: 1px solid #333;
+          border-radius: 6px; color: #888; font-size: 12px; cursor: pointer;
+          transition: all 0.2s; margin-left: auto;
+      }
+      .btn-clear:hover { border-color: #F87171; color: #F87171; }
+
+      .topbar { display: flex; align-items: center; margin-bottom: 20px; }
+      .topbar h2 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #F0EDE8; }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">OrangeAI<span>.</span></div>
+      <div class="nav-menu">
+        <a href="/" class="nav-link ">Klasifikasi</a>
+        <a href="/riwayat-page" class="nav-link active">Riwayat</a>
+        <a href="/statistik-page" class="nav-link">Statistik</a>
+        <a href="/tentang-page" class="nav-link">Tentang</a>
+        <span class="badge-beta">BETA</span>
+      </div>
+    </nav>
+
+    <div class="page-content">
+      <div class="page-title">Riwayat <span>Analisis</span></div>
+      <p class="page-sub">Semua hasil klasifikasi jeruk pada sesi ini</p>
+
+      <div class="summary-strip" id="summaryStrip">
+        <div class="summary-card">
+          <div class="s-label">Total Dianalisis</div>
+          <div class="s-val" id="totalCount">0</div>
+          <div class="s-desc">gambar pada sesi ini</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Rata-rata Confidence</div>
+          <div class="s-val" id="avgConf">—</div>
+          <div class="s-desc">dari semua klasifikasi</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Confidence Tertinggi</div>
+          <div class="s-val" id="maxConf">—</div>
+          <div class="s-desc" id="maxConfFile">—</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-label">Kelas Dominan</div>
+          <div class="s-val" id="dominanKelas" style="font-size:16px;">—</div>
+          <div class="s-desc" id="dominanCount">—</div>
+        </div>
+      </div>
+
+      <div class="topbar">
+        <h2>Semua Hasil</h2>
+        <button class="btn-clear" onclick="clearRiwayat()">Hapus Semua</button>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterTable('semua', this)">
+          Semua
+        </button>
+        <button class="filter-btn" onclick="filterTable('SEGAR', this)">
+          🟢 Segar
+        </button>
+        <button class="filter-btn" onclick="filterTable('BUSUK', this)">
+          🔴 Busuk
+        </button>
+        <button class="filter-btn" onclick="filterTable('BINTIK HITAM', this)">
+          🟡 Bintik Hitam
+        </button>
+        <button class="filter-btn" onclick="filterTable('BERPENYAKIT', this)">
+          🟠 Berpenyakit
+        </button>
+      </div>
+
+      <div id="tableContainer">
+        <div class="empty-state">
+          <div class="empty-icon">📷</div>
+          <p>
+            Belum ada riwayat di sesi ini.<br />
+            <a href="/">Upload gambar jeruk</a> untuk memulai analisis.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let allData = []
+
+      const colorMap = {
+          'SEGAR'       : 'segar',
+          'BUSUK'       : 'busuk',
+          'BINTIK HITAM': 'blackspot',
+          'BERPENYAKIT' : 'berpenyakit',
+      }
+      const confColor = {
+          'SEGAR'       : '#4ADE80',
+          'BUSUK'       : '#F87171',
+          'BINTIK HITAM': '#FBBF24',
+          'BERPENYAKIT' : '#FB923C',
+      }
+
+      async function loadData() {
+          const res  = await fetch('/api/statistik')
+          const data = await res.json()
+
+          // Summary cards
+          document.getElementById('totalCount').textContent = data.total
+
+          if (data.total > 0) {
+              const allConf = data.riwayat.map(r => r.confidence)
+              const avg = (allConf.reduce((a,b) => a+b, 0) / allConf.length).toFixed(1)
+              document.getElementById('avgConf').textContent = avg + '%'
+
+              if (data.tertinggi) {
+                  document.getElementById('maxConf').textContent = data.tertinggi.confidence + '%'
+                  document.getElementById('maxConfFile').textContent = data.tertinggi.filename
+              }
+
+              // Kelas dominan
+              const dominan = Object.entries(data.per_kelas).sort((a,b) => b[1]-a[1])[0]
+              document.getElementById('dominanKelas').textContent = dominan[0]
+              document.getElementById('dominanKelas').style.color = confColor[dominan[0]] || '#E8501A'
+              document.getElementById('dominanCount').textContent = dominan[1] + ' gambar'
+          }
+
+          allData = data.riwayat || []
+          renderTable(allData)
+      }
+
+      function renderTable(data) {
+          const container = document.getElementById('tableContainer')
+          if (!data || data.length === 0) {
+              container.innerHTML = `
+                  <div class="empty-state">
+                      <div class="empty-icon">📷</div>
+                      <p>Belum ada riwayat di sesi ini.<br>
+                      <a href="/">Upload gambar jeruk</a> untuk memulai analisis.</p>
+                  </div>`
+              return
+          }
+
+          const rows = data.map((item, i) => {
+              const cls   = colorMap[item.label] || 'busuk'
+              const color = confColor[item.label] || '#888'
+              return `
+                  <tr>
+                      <td style="color:#555; font-size:12px;">${i+1}</td>
+                      <td><div class="td-filename">${item.filename}<div class="td-sub">Sesi ini</div></div></td>
+                      <td><span class="label-badge ${cls}">${item.label}</span></td>
+                      <td><span class="conf-pill" style="color:${color}">${item.confidence}%</span></td>
+                  </tr>
+              `
+          }).join('')
+
+          container.innerHTML = `
+              <table class="riwayat-table">
+                  <thead>
+                      <tr>
+                          <th>#</th>
+                          <th>File</th>
+                          <th>Hasil</th>
+                          <th>Confidence</th>
+                      </tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+              </table>
+          `
+      }
+
+      function filterTable(kelas, btn) {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+          btn.classList.add('active')
+          if (kelas === 'semua') {
+              renderTable(allData)
+          } else {
+              renderTable(allData.filter(item => item.label === kelas))
+          }
+      }
+
+      function clearRiwayat() {
+          if (!confirm('Hapus semua riwayat sesi ini?')) return
+          fetch('/riwayat-clear', { method: 'POST' })
+              .then(() => { allData = []; loadData(); })
+      }
+
+      loadData()
+    </script>
+  </body>
+</html>
